@@ -14,16 +14,19 @@ class Database:
     
     def discover(self):
         # Discover the schema of the database and store the discovered data
-        uuids = []
+        discovery_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        columns = []
         tables = self.get_tables()
-        discovery_date = datetime.datetime.now()
         for table in tables:
-            columns = self.get_columns(table)
-            for column in columns:
+            table_columns = self.get_columns(table)
+            for column in table_columns:
                 col_type = self.get_type(table, column)
-                uuid = self.uuid(table, column, col_type, discovery_date)
-                uuids.append(uuid)
-        return uuids
+                column_uuid = self.uuid(table, column, col_type)
+                column_data = {'uuid': column_uuid, 'discovery_date': discovery_date}
+                columns.append(column_data)
+        return columns
+
 
     
     def get_tables(self):

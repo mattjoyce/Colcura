@@ -35,6 +35,7 @@ def process_database(config, database_name, no_update):
     return results
 
 
+
 def main():
     parser = argparse.ArgumentParser(description='Database audit tool')
     parser.add_argument('--config', type=str, required=True, help='Path to YAML configuration file')
@@ -60,9 +61,9 @@ def main():
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     output_file = f"audit_{timestamp}.json"
     with open(output_file, 'w') as f:
-        json.dump(crawled_data, f, indent=2)
+        json.dump(discovered_data, f, indent=2)
 
-    print("Audit complete.")
+    print(f"Audit complete. {output_file}")
 
 
 if __name__ == '__main__':
