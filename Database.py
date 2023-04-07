@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 
 class Database:
@@ -11,17 +12,19 @@ class Database:
         # Connect to the database using the connection string
         pass
     
-    def crawl(self):
-        # Crawl the schema of the database and store the discovered data
+    def discover(self):
+        # Discover the schema of the database and store the discovered data
         uuids = []
         tables = self.get_tables()
+        discovery_date = datetime.datetime.now()
         for table in tables:
             columns = self.get_columns(table)
             for column in columns:
                 col_type = self.get_type(table, column)
-                uuid = self.uuid(table, column, col_type)
+                uuid = self.uuid(table, column, col_type, discovery_date)
                 uuids.append(uuid)
         return uuids
+
     
     def get_tables(self):
         # Get a list of all tables in the database
@@ -51,7 +54,7 @@ class Database:
 class SQLiteDatabase(Database):
     def connect(self):
         # Connect to the SQLite database using the connection string
-        self.connection = sqlite3.connect(self.connection_string['database'])
+        self.connection = sqlite3.connect(self.connection_string)
         self.connection.execute('SELECT 1')
         
     def get_tables(self):
