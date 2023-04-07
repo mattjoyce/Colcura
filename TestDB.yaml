@@ -1,0 +1,5 @@
+Test SQLite DB:
+  type: sqlite
+  connection_string: test.db
+  subclass: SQLiteDatabase
+
