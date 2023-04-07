@@ -21,9 +21,14 @@ def process_database(config, database_name, no_update):
     if database_type not in Types:
         raise ValueError(f"Unsupported database type '{database_type}'")
     db_class = Types[database_type]
+    db_string= config[database_name]['connection_string']
+    db_metadata = config[database_name].get('metadata', [])
+    print(db_metadata)
 
     # Create a new instance of the database class
-    db = db_class(config[database_name]['connection_string'])
+    db = db_class(db_string, db_metadata)
+
+    # Get the metadata configuration for the database
 
     # Crawl the database and update the last seen date if necessary
     # if not no_update:
