@@ -1,6 +1,6 @@
 import datetime
 import sqlite3
-import re
+import json
 
 class Metadata:
     def __init__(self, config):
@@ -26,7 +26,7 @@ class FindTableMetadata:
         self.name = name
     
     def get_metadata(self, uuid):
-        table_name, column_name, data_type = uuid.split("::")
+        table_name, column_name, data_type = uuid.split(Database.DELIMITER)
         if table_name=="table_0":
             return {"hot_table": True}
         return None
@@ -35,16 +35,48 @@ class FindColumnMetadata:
         self.name = name
     
     def get_metadata(self, uuid):
-        table_name, column_name, data_type = uuid.split("::")
+        table_name, column_name, data_type = uuid.split(Database.DELIMITER)
         if 'column_0' in column_name:
             return {"hot_column": True}
         return None
+    
+class GPTPIIMetadata:
+    def __init__(self, name):
+        self.name = name
+    
+    def get_metadata(self, uuid):
+        table_name, column_name, data_type = uuid.split(Database.DELIMITER)
+        import openai
+        with open("key_openai.txt", "r") as f:
+          openai.api_key = f.read().strip()
+        messages=[{"role":"system", "content":"You job is to find possible PII in database schema"}]
+        prompt=f"""Assess probability (Not, Low, Medium, High) that the following table definition is used to store PII :
+         Table Name : {table_name} 
+         Column Name : {column_name}
+         Data Type : {data_type}
+         Answer using json only, in this format {{"PII":"Answer"}}"""
+        messages=[{"role":"user","content":prompt}]
+        response = openai.ChatCompletion.create(
+          model="gpt-4",  #TODO move to config
+          messages=messages,
+          max_tokens=100,
+          stop=None,
+          temperature=0.0
+        )
+        for choice in response.choices:
+            if "text" in choice:
+                print(choice.text)
+                return choice.text
+        
+        print(response.choices[0].message.content)
+        return json.loads(response.choices[0].message.content)
+
 
 class Database:
+    DELIMITER='::'
     def __init__(self, connection_string, metadata_config):
         self.connection_string = connection_string
         self.connection = self.connect()
-        self.delimiter='::'
         self.metadata_classes = []
         metadata_list = [metadata_name.strip() for metadata_name in metadata_config.split(",")]
         for metadata_name in metadata_list:
@@ -95,7 +127,7 @@ class Database:
                 print(f"\tColumn: {column} ({col_type})")
 
     def uuid(self, table, column, type):
-        return table + self.delimiter + column + self.delimiter + type
+        return table + self.DELIMITER + column + self.DELIMITER + type
         
 
 class SQLiteDatabase(Database):

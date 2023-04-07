@@ -1,5 +1,10 @@
-Test SQLite DB:
+Test SQLite DB 1:
   type: sqlite
-  connection_string: test.db
-  subclass: SQLiteDatabase
+  connection_string: test1.db
+  metadata: DiscoveryDate, MyTag1, FindTable, GPTPII
+
+Test SQLite DB 2:
+  type: sqlite
+  connection_string: test2.db
+  metadata: DiscoveryDate, MyTag1,FindColumn
 
