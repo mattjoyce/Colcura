@@ -1,0 +1,8 @@
+SQLite DB 1:
+  connection_string: test1.db
+  metadata: discovery_date, mytag1
+  type: sqlite
+SQLite DB 2:
+  connection_string: test2.db
+  metadata: discovery_date, mytest1
+  type: sqlite

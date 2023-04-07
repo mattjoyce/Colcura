@@ -1,5 +1,6 @@
 import datetime
 import sqlite3
+import re
 
 class Metadata:
     def __init__(self, config):
@@ -19,6 +20,25 @@ class MyTag1Metadata(Metadata):
     def get_metadata(self, uuid):
         # This implementation adds the 'mytag1' tag to the metadata
         return {'tag': 'mytag1'}
+
+class FindTableMetadata:
+    def __init__(self, name):
+        self.name = name
+    
+    def get_metadata(self, uuid):
+        table_name, column_name, data_type = uuid.split("::")
+        if table_name=="table_0":
+            return {"hot_table": True}
+        return None
+class FindColumnMetadata:
+    def __init__(self, name):
+        self.name = name
+    
+    def get_metadata(self, uuid):
+        table_name, column_name, data_type = uuid.split("::")
+        if 'column_0' in column_name:
+            return {"hot_column": True}
+        return None
 
 class Database:
     def __init__(self, connection_string, metadata_config):

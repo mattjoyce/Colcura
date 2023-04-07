@@ -3,8 +3,8 @@ import random
 import string
 
 # Set the number of tables and columns
-n = 50
-k = 50
+n = 5
+k = 5
 
 # Open a connection to a new SQLite database
 conn = sqlite3.connect('test2.db')
