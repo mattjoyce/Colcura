@@ -9,6 +9,7 @@ import Database
 # Global dictionary to map database types to their corresponding classes
 Types = {
     "sqlite": Database.SQLiteDatabase,
+    "CSV": Database.CSVDatabase,    
     # Add other database types here as needed
 }
 

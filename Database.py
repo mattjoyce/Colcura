@@ -1,6 +1,7 @@
 import datetime
 import sqlite3
 import json
+import csv
 
 class Metadata:
     def __init__(self, config):
@@ -162,4 +163,36 @@ class SQLiteDatabase(Database):
         for row in cursor.fetchall():
             if row[1] == column:
                 return row[2]
+        return None
+
+
+
+
+class CSVDatabase(Database):
+    def __init__(self, csv_file_path, metadata_config):
+        self.csv_file_path = csv_file_path
+        self.headers = []
+        self._load_headers()
+        super().__init__(csv_file_path, metadata_config)
+
+    def _load_headers(self):
+        with open(self.csv_file_path, newline='') as csvfile:
+            csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            self.headers = next(csvreader)  # Read the first row as headers
+
+    def get_tables(self):
+        # In the case of a CSV file, we only have one "table"
+        return [self.csv_file_path]
+
+    def get_columns(self, table):
+        # Return the headers as columns for the CSV "table"
+        return self.headers
+
+    def get_type(self, table, column):
+        # For CSV files, we don't have specific data types for each column
+        # We can return a generic type, such as 'String'
+        return 'String'
+
+    def connect(self):
+        # In the case of a CSV file, there's no need for a database connection
         return None
