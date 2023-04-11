@@ -16,12 +16,30 @@ class Metadata:
         self.config = config
         self.logger = logger
         
-    def get_metadata(self, uuid):
+    def process_metadata(self, uuid):
         """
         Base implementation for metadata retrieval, which returns an empty dictionary.
         :param uuid: unique identifier for the database object
         """
         return {}
+    
+    def get_uuid_parts(self, uuid):
+        """
+        Split the UUID into its parts and return them as a tuple. Supports UUIDs containing either three or four parts.
+        :param uuid: unique identifier for the database object
+        :return: a tuple containing the database name (if present), table name, column name, and data type
+        """
+        parts = uuid.split(self.DELIMITER)
+        if len(parts) == 3:
+            # The UUID only contains table, column, and type
+            table_name, column_name, data_type = parts
+            # TODO: add logic to handle this case
+        elif len(parts) == 4:
+            # The UUID contains database, table, column, and type
+            db_name, table_name, column_name, data_type = parts
+            # TODO: add logic to handle this case
+        else:
+            raise ValueError("Invalid UUID format")
 
 
 class DiscoveryDateMetadata(Metadata):
@@ -34,7 +52,7 @@ class DiscoveryDateMetadata(Metadata):
         """
         super().__init__(name, config, logger)
         
-    def get_metadata(self, uuid):
+    def process_metadata(self, uuid):
         """
         Adds the discovery date to the metadata.
         :param uuid: unique identifier for the database object
@@ -53,7 +71,7 @@ class MyTag1Metadata(Metadata):
         """
         super().__init__(name, config, logger)
 
-    def get_metadata(self, uuid):
+    def process_metadata(self, uuid):
         """
         Adds the 'mytag1' tag to the metadata.
         :param uuid: unique identifier for the database object
@@ -70,7 +88,7 @@ class FindTableMetadata(Metadata):
         """
         super().__init__(name, config, logger)
         
-    def get_metadata(self, uuid):
+    def process_metadata(self, uuid):
         """
         Adds the 'hot_table' flag to the metadata for tables that match a specified criteria.
         :param uuid: unique identifier for the database object
@@ -90,7 +108,7 @@ class FindColumnMetadata(Metadata):
         """
         super().__init__(name, config, logger)
         
-    def get_metadata(self, uuid):
+    def process_metadata(self, uuid):
         """
         Adds the 'hot_column' flag to the metadata for columns that match a specified criteria.
         :param uuid: unique identifier for the database object
@@ -105,7 +123,7 @@ class FindColumnMetadata(Metadata):
 #     def __init__(self, name):
 #         self.name = name
     
-#     def get_metadata(self, uuid):
+#     def process_metadata(self, uuid):
 #         table_name, column_name, data_type = uuid.split(Database.DELIMITER)
 #         import openai
 #         with open("key_openai.txt", "r") as f:
@@ -171,7 +189,7 @@ class Database:
 
                 # Add metadata to the column data
                 for metadata_obj in self.metadata_classes:
-                    metadata = metadata_obj.get_metadata(column_uuid)
+                    metadata = metadata_obj.process_metadata(column_uuid)
                     if(metadata):
                         column_data.update(metadata)
                 columns.append(column_data)
