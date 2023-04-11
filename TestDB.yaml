@@ -1,7 +1,7 @@
 Test SQLite DB 1:
   type: sqlite
   connection_string: test1.db
-  metadata: DiscoveryDate, MyTag1, FindTable, GPTPII
+  metadata: DiscoveryDate, MyTag1, FindTable
 
 Test SQLite DB 2:
   type: sqlite

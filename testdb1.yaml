@@ -1,0 +1,4 @@
+Test SQLite DB 1:
+  type: sqlite
+  connection_string: test1.db
+  metadata: DiscoveryDate
