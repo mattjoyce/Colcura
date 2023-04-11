@@ -5,6 +5,15 @@ import yaml
 
 import Database
 
+# TODO: Add support for skipping specific tables in the database.
+# This can be done by adding a configuration option in the YAML file for SkipTables,
+# which is a comma-separated list of table names to skip during the audit process.
+
+# TODO: Add support for only auditing specific tables in the database.
+# This can be done by adding a configuration option in the YAML file for OnlyTables,
+# which is a comma-separated list of table names to audit during the audit process.
+
+
 
 # Global dictionary to map database types to their corresponding classes
 Types = {
