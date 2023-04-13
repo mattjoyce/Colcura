@@ -17,7 +17,7 @@ import Database
 
 
 # Global dictionary to map database types to their corresponding classes
-Types = {
+DB_Class_Types = {
     "sqlite": Database.SQLiteDatabase,
     "CSV": Database.CSVDatabase,    
     # Add other database types here as needed
@@ -25,18 +25,31 @@ Types = {
 
 
 def process_database(database_config, logger, no_update):
+    """_summary_
+
+    Args:
+        database_config (_type_): _description_
+        logger (_type_): _description_
+        no_update (_type_): _description_
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """    
     # Get the database type from the configuration
     database_type = database_config['type']
     logging.info(f"Database Type : {database_type}")
 
     # Get the corresponding class for the database type
-    if database_type not in Types:
+    if database_type not in DB_Class_Types:
         raise ValueError(f"Unsupported database type '{database_type}'")
 
     print(database_config)
     
 
-    db_class = Types[database_type]
+    db_class = DB_Class_Types[database_type]
     logging.debug(db_class)
     db = db_class(database_config, logger)
 
@@ -44,15 +57,16 @@ def process_database(database_config, logger, no_update):
     # if not no_update:
     #     db.update_lastseen()
     # print(f"Auditing {db.connection_string['name']}...")
-    results=db.discover()
-
+    db.discover()
+    db.set_metadata()
+    
     # Return the crawled data as a list of UUIDs
-    return results
+    return db.objects
 
 
 
 
-def main():
+def main():        
     # Initialize the root logger
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -102,14 +116,16 @@ def main():
             database_names = [args.database]
 
         # Audit all databases defined in the configuration file
-        discovered_data = []
-        for database_name in database_names:
+        for database_name in database_names:    
+            discovered_data = []
+
             #data = process_database(config, database_name, args.no_update)
             database_config = config[database_name]
             
             #add name to data being passed forward.
             database_config['name'] = database_name
-            data = process_database(database_config, logger, args.no_update)
+
+            data=process_database(database_config, logger, args.no_update)
             discovered_data.extend(data)
 
             # Output the crawled data as JSON to a file for the current database

@@ -1,51 +1,67 @@
 import csv
 import logging
 import sqlite3
-
+from Metadata import NodeTypeMetadata, DiscoveryDateMetadata, FindColumnMetadata, FindTableMetadata, MyTag1Metadata
 
 class Database:
-    DELIMITER='::'
     def __init__(self, db_config, logger):
         """
         A base class for defining a database connection, schema discovery, and metadata discovery.
         :param db_config: a dictionary containing the configuration parameters for the database connection and metadata discovery
         :param logger: a logger instance
         """
+        self.delimiter = db_config.get('UUID_DELIMITER', '::')
         self.connection_string = db_config["connection_string"]
+        logging.info(db_config['connection_string'])
         logging.info(db_config['name'])
         self.connection = self.connect()
-        self.metadata_classes = []
-        metadata_list = db_config.get('metadata', "").split(',')
-        self.metadata_config = [metadata_name.strip() for metadata_name in metadata_list]        
-
+        self.objects = []
+        #first add the database container with name
+        self.objects.append({"uuid": self.uuid(database=db_config['name']) })
+             
+        # add NodeTypeMetadata to the list of metadata classes        
+        self.metadata_classes = [NodeTypeMetadata("type", db_config, logger)] 
+        
+        metadata_list_from_config = db_config.get('metadata', "").split(',')
+        # get the string containing comma separated names from the yaml config, and split to a list
+        
+        self.metadata_config = [metadata_name.strip() for metadata_name in metadata_list_from_config]        
+        
         # Instantiate metadata classes based on configuration and add them to a list
         for metadata_name in self.metadata_config:
             logging.info(metadata_name)
             metadata_class = globals()[metadata_name + 'Metadata']
             metadata_instance = metadata_class(metadata_name,db_config,self.logger)
             self.metadata_classes.append(metadata_instance)
+    
+    def set_metadata(self):
+        for obj in self.objects:
+            # Add metadata to the object
+            for metadata_class in self.metadata_classes:
+                metadata = metadata_class.derive_metadata(obj['uuid'])
+                self.logger.info(metadata)
+                if metadata:
+                    obj.update(metadata)
+
             
     def discover(self):
         """
         Discovers the schema of the database and stores the discovered metadata.
         :return: a list of dictionaries containing the metadata for each column in the database schema.
         """
-        columns = []
+        database=self.db_config.get('name')
         tables = self.get_tables()
         for table in tables:
+            self.objects.append({"uuid": self.uuid(database,table) })
             table_columns = self.get_columns(table)
             for column in table_columns:
                 col_type= self.get_type(table, column)
-                column_uuid = self.uuid(self.name, table, column, col_type)
+                column_uuid = self.uuid(database, table, column, col_type)
                 column_data = {'uuid': column_uuid}
 
-                # Add metadata to the column data
-                for metadata_obj in self.metadata_classes:
-                    metadata = metadata_obj.process_metadata(column_uuid)
-                    if(metadata):
-                        column_data.update(metadata)
-                columns.append(column_data)
-        return columns
+
+                self.objects.append(column_data)
+        return self.objects
     
     def connect(self):
         """
@@ -90,16 +106,25 @@ class Database:
                 col_type = self.get_type(table, column)
                 print(f"\tColumn: {column} ({col_type})")
 
-    def uuid(self, database, table, column, type):
+    def uuid(self, database, table=None, column=None, column_type=None):
         """
         Generates a unique identifier for a database object.
         :param database: the name of the database.
-        :param table: the name of the table.
-        :param column: the name of the column.
-        :param type: the data type of the column.
+        :param table: (optional) the name of the table.
+        :param column: (optional) the name of the column.
+        :param column_type: (optional) the data type of the column.
         :return: a string representing a unique identifier for the specified database object.
         """
-        return database + self.DELIMITER + table + self.DELIMITER + column + self.DELIMITER
+        if database:
+            uuid = database
+            if table:
+                uuid += self.delimiter + table
+                if column and column_type:
+                    uuid += self.delimiter + column + self.delimiter + column_type
+            return uuid
+        else:
+            raise ValueError("Invalid UUID format: check parts")
+
 
 
 class SQLiteDatabase(Database):

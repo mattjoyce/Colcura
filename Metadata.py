@@ -12,7 +12,7 @@ class Metadata:
         self.config = config
         self.logger = logger
         
-    def process_metadata(self, uuid):
+    def derive_metadata(self, uuid):
         """
         Base implementation for metadata retrieval, which returns an empty dictionary.
         :param uuid: unique identifier for the database object
@@ -25,18 +25,29 @@ class Metadata:
         :param uuid: unique identifier for the database object
         :return: a tuple containing the database name (if present), table name, column name, and data type
         """
-        parts = uuid.split(self.DELIMITER)
-        if len(parts) == 3:
-            # The UUID only contains table, column, and type
-            table_name, column_name, data_type = parts
-            # TODO: add logic to handle this case
+        delimeter=self.config.get("UUID_DELIMETER","::")
+        parts = uuid.split(delimeter)
+        if len(parts) == 1:
+            return (parts[0], None, None, None)
+        elif len(parts) == 2:
+            return (parts[0], parts[1], None, None)
         elif len(parts) == 4:
-            # The UUID contains database, table, column, and type
-            db_name, table_name, column_name, data_type = parts
-            # TODO: add logic to handle this case
+            return (parts[0], parts[1], parts[2], parts[3])
         else:
-            raise ValueError("Invalid UUID format")
+            raise ValueError(f"Invalid UUID format {uuid}")
 
+class NodeTypeMetadata(Metadata):
+    def __init__(self, name, config, logger=None):
+        super().__init__(name, config, logger)
+
+    def derive_metadata(self, uuid):
+        db_name, table_name, column_name, data_type = self.get_uuid_parts(uuid)
+        if not table_name:
+            return {"object_type":"database"}
+        elif not column_name:
+            return {"object_type":"table"}
+        else:
+            return {"object_type":"column"}
 
 
 class DiscoveryDateMetadata(Metadata):
@@ -49,7 +60,7 @@ class DiscoveryDateMetadata(Metadata):
         """
         super().__init__(name, config, logger)
         
-    def process_metadata(self, uuid):
+    def derive_metadata(self, uuid):
         """
         Adds the discovery date to the metadata.
         :param uuid: unique identifier for the database object
@@ -68,7 +79,7 @@ class MyTag1Metadata(Metadata):
         """
         super().__init__(name, config, logger)
 
-    def process_metadata(self, uuid):
+    def derive_metadata(self, uuid):
         """
         Adds the 'mytag1' tag to the metadata.
         :param uuid: unique identifier for the database object
@@ -85,12 +96,13 @@ class FindTableMetadata(Metadata):
         """
         super().__init__(name, config, logger)
         
-    def process_metadata(self, uuid):
+    def derive_metadata(self, uuid):
         """
         Adds the 'hot_table' flag to the metadata for tables that match a specified criteria.
         :param uuid: unique identifier for the database object
         """
-        db_name, table_name, column_name, data_type = uuid.split(Database.DELIMITER)
+        delimeter=self.config.get('UUID_DELIMETER')
+        db_name, table_name, column_name, data_type = uuid.split(delimeter)
         if table_name=="table_0":
             return {"hot_table": True}
         return None
@@ -105,13 +117,15 @@ class FindColumnMetadata(Metadata):
         """
         super().__init__(name, config, logger)
         
-    def process_metadata(self, uuid):
+    def derive_metadata(self, uuid):
         """
         Adds the 'hot_column' flag to the metadata for columns that match a specified criteria.
         :param uuid: unique identifier for the database object
         :return: a dictionary containing the 'hot_column' flag if the criteria is met, otherwise returns None
         """
-        db_name, table_name, column_name, data_type = uuid.split(Database.DELIMITER)
+        delimeter=self.config.get('UUID_DELIMETER')
+
+        db_name, table_name, column_name, data_type = uuid.split(delimeter)
         if 'column_0' in column_name:
             return {"hot_column": True}
         return None
@@ -120,7 +134,7 @@ class FindColumnMetadata(Metadata):
 #     def __init__(self, name):
 #         self.name = name
     
-#     def process_metadata(self, uuid):
+#     def derive_metadata(self, uuid):
 #         table_name, column_name, data_type = uuid.split(Database.DELIMITER)
 #         import openai
 #         with open("key_openai.txt", "r") as f:
