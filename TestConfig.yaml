@@ -1,4 +1,5 @@
 Test CSV 1:
+  UUID_DELIMETER : ::
   type : CSV
   connection_string: source.csv
   metadata: DiscoveryDate

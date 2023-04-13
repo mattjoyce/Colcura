@@ -50,7 +50,7 @@ def process_database(database_config, logger, no_update):
     
 
     db_class = DB_Class_Types[database_type]
-    logging.debug(db_class)
+    logging.debug(f"DB Class : {db_class}")
     db = db_class(database_config, logger)
 
     # Crawl the database and update the last seen date if necessary
@@ -103,7 +103,6 @@ def main():
             yaml.dump(sample_config, f)
         print('Sample configuration file generated at sample_config.yaml')
     else:
-
         # Read the YAML configuration file
         with open(args.config, 'r') as f:
             config = yaml.safe_load(f)
@@ -134,7 +133,7 @@ def main():
             with open(output_file, 'w') as f:
                 json.dump(data, f, indent=2)
 
-        print(f"Audit complete. {len(database_names)} databases audited.")
+        print(f"Capture complete. {len(database_names)} databases audited.")
 
 
 

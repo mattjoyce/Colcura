@@ -12,8 +12,8 @@ class Database:
         """
         self.delimiter = db_config.get('UUID_DELIMITER', '::')
         self.connection_string = db_config["connection_string"]
-        logging.info(db_config['connection_string'])
-        logging.info(db_config['name'])
+        logging.info(f"Connection String : {db_config['connection_string']}")
+        logging.info(f"DB Name : {db_config['name']}")
         self.connection = self.connect()
         self.objects = []
         #first add the database container with name
@@ -29,7 +29,7 @@ class Database:
         
         # Instantiate metadata classes based on configuration and add them to a list
         for metadata_name in self.metadata_config:
-            logging.info(metadata_name)
+            logging.info(f"Metadata Extension : {metadata_name}")
             metadata_class = globals()[metadata_name + 'Metadata']
             metadata_instance = metadata_class(metadata_name,db_config,self.logger)
             self.metadata_classes.append(metadata_instance)
@@ -39,8 +39,8 @@ class Database:
             # Add metadata to the object
             for metadata_class in self.metadata_classes:
                 metadata = metadata_class.derive_metadata(obj['uuid'])
-                self.logger.info(metadata)
-                if metadata:
+                if metadata:                
+                    self.logger.info(f"Metadata value : {metadata}")
                     obj.update(metadata)
 
             
