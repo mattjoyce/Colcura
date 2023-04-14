@@ -16,16 +16,9 @@ import Database
 # This can be done by adding a configuration option in the YAML file for OnlyTables,
 # which is a comma-separated list of table names to audit during the audit process.
 
-# TODO: remove ALL databses as a command line options, the db must be specified 
-# and must match the config file db definitions
-
-# TODO: add output file to YAML
-
-# TODO: add comment to command line arguments
-
 # TODO: abstract output data store to some sort of extension, file, couch, moongo etc
 
-# TODO: add metadata extention parameters to make them kore flexible
+# TODO: add metadata extention parameters to make them more flexible
 
 # TODO: add metadata filter to ignore certain object types
  
@@ -108,7 +101,7 @@ def main():
     parser.add_argument('--database', type=str, default='All', help='Name of the database to audit')
     parser.add_argument('--no-update', action='store_true', help='Do not update the last seen date')
     parser.add_argument('--sample-config', action='store_true', help='generate a sample configuration file')
-    
+    parser.add_argument('--overwrite', action='store_true', help='Overwrite existing output file')
     args = parser.parse_args()
 
     if args.sample_config:
@@ -173,7 +166,7 @@ def main():
             data = process_database(capture_event, logger, args.no_update)
 
             # If the output file exists, this is a subsequent capture
-            if os.path.isfile(output_file):
+            if os.path.isfile(output_file) and not args.overwrite:                
                 # Load the previous audit data
                 with open(output_file, 'r') as f:
                     previous_audit_data = json.load(f)
@@ -184,6 +177,7 @@ def main():
                 ###  perform comparison
                 ###
             else:
+                # new scan or overwrite
                 audit.objects = data
 
             # Save the audit data to file
