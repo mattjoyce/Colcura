@@ -3,6 +3,8 @@ import datetime
 import json
 import logging
 import yaml
+import datetime
+import os
 
 import Database
 
@@ -14,6 +16,18 @@ import Database
 # This can be done by adding a configuration option in the YAML file for OnlyTables,
 # which is a comma-separated list of table names to audit during the audit process.
 
+class Audit:
+    def __init__(self, logger):
+        self.capture_events = []
+        self.objects = []
+        self.logger = logger
+    
+    def add_capture_event(self, timestamp, config, comment=''):
+        capture_event = {'time': timestamp, 'config': config, 'comment': comment}
+        self.capture_events.append(capture_event)
+        self.logger.info(f"Added capture event: {capture_event}")
+        return capture_event
+    
 
 
 # Global dictionary to map database types to their corresponding classes
@@ -76,13 +90,13 @@ def main():
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     
-    
     parser = argparse.ArgumentParser(description='Database audit tool')
     parser.add_argument('--config', type=str, help='Path to YAML configuration file')
     parser.add_argument('--database', type=str, default='All', help='Name of the database to audit')
     parser.add_argument('--no-update', action='store_true', help='Do not update the last seen date')
-    parser.add_argument('--sample-config', action='store_true', help='generate a sample configuration file' )
-
+    parser.add_argument('--sample-config', action='store_true', help='generate a sample configuration file')
+    parser.add_argument('-o', '--output', type=str, help='Name of the output file')
+    
     args = parser.parse_args()
 
     if args.sample_config:
@@ -116,24 +130,53 @@ def main():
 
         # Audit all databases defined in the configuration file
         for database_name in database_names:    
-            discovered_data = []
+            # Initialize the Audit object
+            audit = Audit(logger)
 
-            #data = process_database(config, database_name, args.no_update)
+            # Get the database configuration
             database_config = config[database_name]
             
-            #add name to data being passed forward.
+            # Add the database name to the configuration
             database_config['name'] = database_name
-
-            data=process_database(database_config, logger, args.no_update)
-            discovered_data.extend(data)
-
-            # Output the crawled data as JSON to a file for the current database
+            
             timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            output_file = f"audit_{database_name}_{timestamp}.json"
-            with open(output_file, 'w') as f:
-                json.dump(data, f, indent=2)
+            # Add the capture event to the Audit object
+            json_capture_event=audit.add_capture_event(timestamp,database_config,f"Audit of {database_config['name']}")
 
-        print(f"Capture complete. {len(database_names)} databases audited.")
+            # Get the output file name
+            if args.output:
+                output_file = args.output
+            else:
+                output_file = f"audit_{database_name}_{timestamp}.json"
+
+            # Capture the data from the database
+            data = process_database(database_config, logger, args.no_update)
+
+            # If the output file exists, this is a subsequent capture
+            if os.path.isfile(output_file):
+                # Load the previous audit data
+                with open(output_file, 'r') as f:
+                    previous_audit_data = json.load(f)
+                # Set the previous audit data in the Audit object
+                audit.capture_events.extend(previous_audit_data.get('capture_events', []))
+                audit.objects = previous_audit_data.get('objects', [])
+                ###
+                ###  perform comparison
+                ###
+            else:
+                audit.objects = data
+
+            # Save the audit data to file
+            audit_data = {
+                "capture_events": audit.capture_events,
+                "objects": audit.objects
+            }
+            with open(output_file, 'w') as f:
+                json.dump(audit_data, f, indent=2)
+            logger.info(f"Audit data saved to {output_file}")
+                
+                
+
 
 
 

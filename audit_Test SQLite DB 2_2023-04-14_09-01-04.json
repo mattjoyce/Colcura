@@ -1,0 +1,80 @@
+[
+  {
+    "uuid": "Test SQLite DB 2",
+    "object_type": "database",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_0",
+    "object_type": "table",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_0::column_0::REAL",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_0::column_1::REAL",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_0::column_2::REAL",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_0::column_3::REAL",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_0::column_4::REAL",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_1",
+    "object_type": "table",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_1::column_0::TEXT",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_1::column_1::REAL",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_1::column_2::REAL",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_1::column_3::REAL",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  },
+  {
+    "uuid": "Test SQLite DB 2::table_1::column_4::REAL",
+    "object_type": "column",
+    "discovery_date": "2023-04-14 09:01:04",
+    "tag": "mytag1"
+  }
+]
