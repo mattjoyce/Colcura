@@ -159,3 +159,46 @@ class FindColumnMetadata(Metadata):
         
 #         print(response.choices[0].message.content)
 #         return json.loads(response.choices[0].message.content)
+
+
+class FindAndTagMetadata(Metadata):
+    def __init__(self, name, config, logger=None):
+        """
+        Subclass of Metadata that adds a specified tag to the metadata for objects matching the specified criteria.
+        :param name: the name of the metadata
+        :param config: a dictionary containing configuration parameters
+        :param logger: a logger instance
+        """
+        super().__init__(name, config, logger)
+        self.metadata_parameters = config['database_config'].get('metadata_parameters', {}).get(name, {})
+
+    def derive_metadata(self, uuid):
+        """
+        Adds the specified tag to the metadata for objects matching the specified criteria.
+        :param uuid: unique identifier for the database object
+        :return: a dictionary containing the specified tag if the criteria are met, otherwise returns None
+        """
+        results = []
+        for param_name, param_config in self.metadata_parameters.items():
+            object_type = param_config.get('object_type', [])
+            uuid_substring = param_config.get('uuid_substring', '')
+            tag = param_config.get('tag', '')
+
+            if not isinstance(object_type, list):
+                object_type = [object_type]
+
+            db_name, table_name, column_name, data_type = self.get_uuid_parts(uuid)
+
+            current_object_type = None
+            if not table_name:
+                current_object_type = 'database'
+            elif not column_name:
+                current_object_type = 'table'
+            else:
+                current_object_type = 'column'
+
+            if current_object_type in object_type and uuid_substring in uuid:
+                results.append({f'tag_{param_name}': tag})
+
+        return results if results else None
+
