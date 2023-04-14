@@ -1,7 +1,7 @@
 import csv
 import logging
 import sqlite3
-from Metadata import NodeTypeMetadata, CaptureDateMetadata, FindColumnMetadata, FindTableMetadata, MyTag1Metadata
+from Metadata import NodeTypeMetadata, CaptureDateMetadata, FindColumnMetadata, FindTableMetadata, MyTag1Metadata, FindAndTagMetadata
 
 class Database:
     def __init__(self, capture_event, logger):
@@ -41,9 +41,13 @@ class Database:
             # Add metadata to the object
             for metadata_class in self.metadata_classes:
                 metadata = metadata_class.derive_metadata(obj['uuid'])
-                if metadata:                
-                    self.logger.info(f"Metadata value : {metadata}")
-                    obj.update(metadata)
+                if metadata:
+                    if isinstance(metadata, list):
+                        for item in metadata:
+                            obj.update(item)
+                    else:
+                        obj.update(metadata)
+
 
             
     def discover(self):
@@ -130,10 +134,10 @@ class Database:
 
 
 class SQLiteDatabase(Database):
-    def __init__(self, db_config, logger):
+    def __init__(self, capture_event, logger):
         self.logger = logger
-        self.db_config = db_config
-        super().__init__(db_config, logger)
+        self.capture_event = capture_event
+        super().__init__(capture_event, logger)
         # additional initialization code here, specific to SQLiteDatabase
         
     def connect(self):

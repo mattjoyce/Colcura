@@ -1,10 +1,26 @@
 Test SQLite DB 1:
+  output: test1.json
   type: sqlite
   connection_string: test1.db
-  metadata: DiscoveryDate, MyTag1, FindTable
+  metadata: CaptureDate, MyTag1, FindTable, FindAndTag
+  metadata_parameters:
+    FindAndTag:
+      First:
+        object_type:
+          - column
+        uuid_substring: '3'
+        tag: 'testtag3'
+      Second:
+        object_type:
+          - table
+          - column
+        uuid_substring: '4'
+        tag: 'testtag4'
+
 
 Test SQLite DB 2:
+  output: test2.json
   type: sqlite
   connection_string: test2.db
-  metadata: DiscoveryDate, MyTag1,FindColumn
+  metadata: CaptureDate, MyTag1,FindColumn
 
