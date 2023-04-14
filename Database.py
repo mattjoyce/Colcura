@@ -1,28 +1,30 @@
 import csv
 import logging
 import sqlite3
-from Metadata import NodeTypeMetadata, DiscoveryDateMetadata, FindColumnMetadata, FindTableMetadata, MyTag1Metadata
+from Metadata import NodeTypeMetadata, CaptureDateMetadata, FindColumnMetadata, FindTableMetadata, MyTag1Metadata
 
 class Database:
-    def __init__(self, db_config, logger):
+    def __init__(self, capture_event, logger):
         """
         A base class for defining a database connection, schema discovery, and metadata discovery.
         :param db_config: a dictionary containing the configuration parameters for the database connection and metadata discovery
         :param logger: a logger instance
         """
-        self.delimiter = db_config.get('UUID_DELIMITER', '::')
-        self.connection_string = db_config["connection_string"]
-        logging.info(f"Connection String : {db_config['connection_string']}")
-        logging.info(f"DB Name : {db_config['name']}")
+        self.db_config = capture_event['database_config']
+        self.delimiter = self.db_config.get('UUID_DELIMITER', '::')
+        self.connection_string = self.db_config["connection_string"]
+        logging.info(f"Connection String : {self.db_config['connection_string']}")
+        logging.info(f"DB Name : {self.db_config['name']}")
         self.connection = self.connect()
         self.objects = []
         #first add the database container with name
-        self.objects.append({"uuid": self.uuid(database=db_config['name']) })
+        self.objects.append({"uuid": self.uuid(database=self.db_config['name']) })
              
-        # add NodeTypeMetadata to the list of metadata classes        
-        self.metadata_classes = [NodeTypeMetadata("type", db_config, logger)] 
+        # add mandatory metadata classes        
+        self.metadata_classes = [NodeTypeMetadata("type", capture_event, logger), 
+                                 CaptureDateMetadata("type", capture_event, logger)] 
         
-        metadata_list_from_config = db_config.get('metadata', "").split(',')
+        metadata_list_from_config = self.db_config.get('metadata', "").split(',')
         # get the string containing comma separated names from the yaml config, and split to a list
         
         self.metadata_config = [metadata_name.strip() for metadata_name in metadata_list_from_config]        
@@ -31,7 +33,7 @@ class Database:
         for metadata_name in self.metadata_config:
             logging.info(f"Metadata Extension : {metadata_name}")
             metadata_class = globals()[metadata_name + 'Metadata']
-            metadata_instance = metadata_class(metadata_name,db_config,self.logger)
+            metadata_instance = metadata_class(metadata_name,capture_event,self.logger)
             self.metadata_classes.append(metadata_instance)
     
     def set_metadata(self):

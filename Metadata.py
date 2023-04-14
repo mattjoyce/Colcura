@@ -50,7 +50,7 @@ class NodeTypeMetadata(Metadata):
             return {"object_type":"column"}
 
 
-class DiscoveryDateMetadata(Metadata):
+class CaptureDateMetadata(Metadata):
     def __init__(self, name, config, logger=None):
         """
         Subclass of Metadata that adds the discovery date to the metadata.
@@ -65,8 +65,7 @@ class DiscoveryDateMetadata(Metadata):
         Adds the discovery date to the metadata.
         :param uuid: unique identifier for the database object
         """
-        discovery_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        return {'discovery_date': discovery_date}
+        return {'capture_date': self.config['timestamp']}
 
 
 class MyTag1Metadata(Metadata):

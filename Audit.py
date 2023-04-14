@@ -16,14 +16,29 @@ import Database
 # This can be done by adding a configuration option in the YAML file for OnlyTables,
 # which is a comma-separated list of table names to audit during the audit process.
 
+# TODO: remove ALL databses as a command line options, the db must be specified 
+# and must match the config file db definitions
+
+# TODO: add output file to YAML
+
+# TODO: add comment to command line arguments
+
+# TODO: abstract output data store to some sort of extension, file, couch, moongo etc
+
+# TODO: add metadata extention parameters to make them kore flexible
+
+# TODO: add metadata filter to ignore certain object types
+ 
+
+
 class Audit:
     def __init__(self, logger):
         self.capture_events = []
         self.objects = []
         self.logger = logger
     
-    def add_capture_event(self, timestamp, config, comment=''):
-        capture_event = {'time': timestamp, 'config': config, 'comment': comment}
+    def add_capture_event(self, timestamp, comment, config):
+        capture_event = {'timestamp': timestamp, 'database_config': config, 'comment': comment}
         self.capture_events.append(capture_event)
         self.logger.info(f"Added capture event: {capture_event}")
         return capture_event
@@ -38,11 +53,11 @@ DB_Class_Types = {
 }
 
 
-def process_database(database_config, logger, no_update):
+def process_database(capture_event, logger, no_update):
     """_summary_
 
     Args:
-        database_config (_type_): _description_
+        capture_event (_type_): _description_
         logger (_type_): _description_
         no_update (_type_): _description_
 
@@ -53,19 +68,16 @@ def process_database(database_config, logger, no_update):
         _type_: _description_
     """    
     # Get the database type from the configuration
-    database_type = database_config['type']
+    database_type = capture_event['database_config']['type']
     logging.info(f"Database Type : {database_type}")
 
     # Get the corresponding class for the database type
     if database_type not in DB_Class_Types:
-        raise ValueError(f"Unsupported database type '{database_type}'")
-
-    print(database_config)
-    
+        raise ValueError(f"Unsupported database type '{database_type}'")    
 
     db_class = DB_Class_Types[database_type]
     logging.debug(f"DB Class : {db_class}")
-    db = db_class(database_config, logger)
+    db = db_class(capture_event, logger)
 
     # Crawl the database and update the last seen date if necessary
     # if not no_update:
@@ -92,10 +104,10 @@ def main():
     
     parser = argparse.ArgumentParser(description='Database audit tool')
     parser.add_argument('--config', type=str, help='Path to YAML configuration file')
+    parser.add_argument('--comment', type=str, help='Custom comment for the capture event.')    
     parser.add_argument('--database', type=str, default='All', help='Name of the database to audit')
     parser.add_argument('--no-update', action='store_true', help='Do not update the last seen date')
     parser.add_argument('--sample-config', action='store_true', help='generate a sample configuration file')
-    parser.add_argument('-o', '--output', type=str, help='Name of the output file')
     
     args = parser.parse_args()
 
@@ -104,13 +116,15 @@ def main():
         sample_config = {
             'SQLite DB 1': {
                 'type': 'sqlite',
+                'output': 'test1.json',
                 'connection_string': 'test1.db',
-                'metadata': 'discovery_date, mytag1'
+                'metadata': 'mytag1'
             },
             'SQLite DB 2': {
                 'type': 'sqlite',
+                'output': 'test2.json',
                 'connection_string': 'test2.db',
-                'metadata': 'discovery_date, mytest1'
+                'metadata': 'mytest1'
             }
         }
         with open('sample_config.yaml', 'w') as f:
@@ -140,17 +154,23 @@ def main():
             database_config['name'] = database_name
             
             timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            # Add the capture event to the Audit object
-            json_capture_event=audit.add_capture_event(timestamp,database_config,f"Audit of {database_config['name']}")
+            
+            # prepare the capture event comment
+            if args.comment:
+                commnet=args.comment
+            else:
+                comment=f"Audit of {database_config['name']}"
+
+             # Add the capture event to the Audit object               
+            capture_event=audit.add_capture_event(timestamp,comment,database_config)
 
             # Get the output file name
-            if args.output:
-                output_file = args.output
-            else:
-                output_file = f"audit_{database_name}_{timestamp}.json"
+            output_file = database_config.get("output", "output.json")
+            logging.info(f"Output file : {output_file}")
 
             # Capture the data from the database
-            data = process_database(database_config, logger, args.no_update)
+            # TODO : pass the capture event forward, it contain db config plus the timestamp
+            data = process_database(capture_event, logger, args.no_update)
 
             # If the output file exists, this is a subsequent capture
             if os.path.isfile(output_file):
